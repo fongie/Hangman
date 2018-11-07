@@ -24,7 +24,7 @@ public class GameInstance {
       startNewGame();
    }
 
-   private StatusReport makeReport() {
+   public StatusReport makeReport() {
       /*
       JsonArrayBuilder jsonLetters = Json.createArrayBuilder();
       for (LetterPosition lp : correctLetters) {

@@ -1,6 +1,8 @@
 package DTO;
 
-public class Guess {
+import java.io.Serializable;
+
+public class Guess implements Serializable {
    private String word;
    private char letter;
    private boolean guessedFullWord;
@@ -23,5 +25,16 @@ public class Guess {
 
    public boolean isGuessedFullWord() {
       return guessedFullWord;
+   }
+   @Override
+   public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Guessing ");
+      if (guessedFullWord) {
+         sb.append(word);
+      } else {
+         sb.append(letter);
+      }
+      return sb.toString();
    }
 }
