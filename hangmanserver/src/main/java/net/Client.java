@@ -16,18 +16,19 @@ public class Client implements Runnable {
 
    Client(Socket socket) {
       this.socket = socket;
-      gameInstance = new GameInstance();
    }
 
-   @Override
    public void run() {
       System.out.println("Starting new client thread!");
+      gameInstance = new GameInstance();
 
       try {
          from = new ObjectInputStream(socket.getInputStream());
          to = new ObjectOutputStream(socket.getOutputStream());
 
          to.writeObject(gameInstance.makeReport()); //at start give number of letters etc to client
+         to.flush();
+         to.reset();
       } catch (IOException e) {
          e.printStackTrace();
          System.err.println("Server failed while creating a listening socket.");

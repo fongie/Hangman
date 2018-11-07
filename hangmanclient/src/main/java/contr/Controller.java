@@ -1,5 +1,6 @@
 package contr;
 
+import DTO.StatusReport;
 import net.Connection;
 import DTO.Guess;
 
@@ -8,11 +9,12 @@ public class Controller {
    public Controller() {
    }
 
-   public void startGame() {
+   public StatusReport startGame() {
       conn = new Connection();
+      return conn.start();
    }
 
-   public void makeGuess(Guess guess) {
-      conn.makeGuess(guess);
+   public StatusReport makeGuess(Guess guess) {
+      return conn.makeGuess(guess);
    }
 }

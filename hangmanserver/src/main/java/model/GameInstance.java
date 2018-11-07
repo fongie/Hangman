@@ -102,6 +102,7 @@ public class GameInstance {
       remainingAttempts = word.length();
       correctLetters = new ArrayList<LetterPosition>();
 
+      System.out.println("Starting new game with word: " + word);
       /*
       guessLetter('o');
       guessWord("hello");

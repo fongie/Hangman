@@ -12,7 +12,6 @@ import java.net.Socket;
 public class Connection {
    private static final String HOST = "192.168.0.2";
    private static final int PORT = 8080;
-   private static final int LINGER_TIME = 5000;
    private static final int HALF_HOUR = 1800000;
    private static final int HALF_MINUTE = 30000;
 
@@ -34,34 +33,42 @@ public class Connection {
          e.printStackTrace();
          System.err.println("Could not connect to server.");
       }
+   }
 
+   public StatusReport start() {
+      StatusReport report = null;
       try {
-         StatusReport report = (StatusReport) receive.readObject();
-         System.out.println(report.toString());
+         report = (StatusReport) receive.readObject();
+         //System.out.println(report.toString());
       } catch (IOException e) {
          e.printStackTrace();
       } catch (ClassNotFoundException e) {
          e.printStackTrace();
       }
+      return report;
    }
 
-   public void makeGuess(Guess guess) {
+   public StatusReport makeGuess(Guess guess) {
       try {
-         System.out.println(guess.toString());
+         //System.out.println(guess.toString());
          send.writeObject(guess);
+         send.flush();
+         send.reset();
       } catch (IOException e) {
          e.printStackTrace();
          System.err.println("Could not send guess to server");
       }
 
+      StatusReport report = null;
       try {
-         StatusReport report = (StatusReport) receive.readObject();
-         System.out.println(report.toString());
+         report = (StatusReport) receive.readObject();
+         //System.out.println(report.toString());
       } catch (IOException e) {
          e.printStackTrace();
       } catch (ClassNotFoundException e) {
          e.printStackTrace();
       }
 
+      return report;
    }
 }
