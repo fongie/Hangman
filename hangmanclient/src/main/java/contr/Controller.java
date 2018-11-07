@@ -18,8 +18,8 @@ public class Controller {
    }
 
    public void makeGuess(Guess guess, Consumer print) {
-      CompletableFuture.supplyAsync(
+      CompletableFuture.supplyAsync( //runs in common thread pool
             () -> conn.makeGuess(guess)
-            ).thenAccept(print);
+            ).thenAccept(print); //return value is consumed by Consumer print (a Printer) on thread complete
    }
 }

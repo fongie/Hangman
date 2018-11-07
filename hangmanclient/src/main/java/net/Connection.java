@@ -36,18 +36,17 @@ public class Connection {
    }
 
    public StatusReport start() {
-      StatusReport report = null;
-      try {
-         report = (StatusReport) receive.readObject();
-      } catch (IOException e) {
-         e.printStackTrace();
-      } catch (ClassNotFoundException e) {
-         e.printStackTrace();
-      }
-      return report;
+      return waitForReport();
    }
 
    public StatusReport makeGuess(Guess guess) {
+      /* test threading
+      try {
+         Thread.sleep(1000);
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      }
+       */
       try {
          send.writeObject(guess);
          send.flush();
@@ -57,16 +56,19 @@ public class Connection {
          System.err.println("Could not send guess to server");
       }
 
+      return waitForReport();
+   }
+
+   private StatusReport waitForReport() {
       StatusReport report = null;
       try {
          report = (StatusReport) receive.readObject();
-         //System.out.println(report.toString());
       } catch (IOException e) {
          e.printStackTrace();
       } catch (ClassNotFoundException e) {
          e.printStackTrace();
       }
-
       return report;
    }
+
 }

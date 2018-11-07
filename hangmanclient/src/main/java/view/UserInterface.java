@@ -18,6 +18,12 @@ public class UserInterface implements Runnable {
       cntr = new Controller();
    }
 
+   public void start() {
+      System.out.println("Welcome to hangman!");
+      System.out.println("You will be given a random word to guess. If you write one letter, you guess at a letter and will see whether it exists in the word or not and at what location.\n If you write more than one letter, you are guessing the whole word.\nIf you win or lose a round, your score is adjusted and the next round starts immediately.\nGood luck!");
+      new Thread(this).start();
+   }
+
    public void run() {
       printGameStatus(cntr.startGame());
       printPrompt();
@@ -35,14 +41,15 @@ public class UserInterface implements Runnable {
             cntr.makeGuess(g, new Printer());
          }
       }
-
-   }
-   public void start() {
-      System.out.println("Welcome to hangman!");
-      System.out.println("You will be given a random word to guess. If you write one letter, you guess at a letter and will see whether it exists in the word or not and at what location.\n If you write more than one letter, you are guessing the whole word.\nIf you win or lose a round, your score is adjusted and the next round starts immediately.\nGood luck!");
-      new Thread(this).start();
    }
 
+   private synchronized void printPrompt() {
+      System.out.print(">: ");
+   }
+
+   //as far as I understand, synchronized means "one thread per instance of the class" can operate on it,
+   //so since theres only one thread for this userinterface class running then only one "guess" thread (Printer class) can
+   //write at a time
    private synchronized void printGameStatus(StatusReport status) {
       StringBuilder all = new StringBuilder();
       all.append("Your current score is ");
@@ -67,13 +74,8 @@ public class UserInterface implements Runnable {
       all.append(word);
       System.out.println(all.toString());
    }
-
-   private void printPrompt() {
-      System.out.print(">: ");
-   }
-
    private class Printer implements Consumer {
-      public void accept(Object toPrint) {
+      public void accept(Object toPrint) { //when thread completes (in controller), accept is called with return value
             printGameStatus((StatusReport) toPrint);
             printPrompt();
       }
