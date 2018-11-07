@@ -4,6 +4,9 @@ import DTO.StatusReport;
 import net.Connection;
 import DTO.Guess;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+
 public class Controller {
    private Connection conn;
    public Controller() {
@@ -14,7 +17,9 @@ public class Controller {
       return conn.start();
    }
 
-   public StatusReport makeGuess(Guess guess) {
-      return conn.makeGuess(guess);
+   public void makeGuess(Guess guess, Consumer print) {
+      CompletableFuture.supplyAsync(
+            () -> conn.makeGuess(guess)
+            ).thenAccept(print);
    }
 }

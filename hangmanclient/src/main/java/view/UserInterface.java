@@ -6,43 +6,44 @@ import DTO.StatusReport;
 import contr.Controller;
 
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 /**
  * The main point of user interaction, a command line view
  */
-public class UserInterface {
+public class UserInterface implements Runnable {
    private Controller cntr;
 
    public UserInterface() {
       cntr = new Controller();
    }
 
-   public void start() {
-
-      System.out.println("Welcome to hangman!");
-      System.out.println("You will be given a random word to guess. If you write one letter, you guess at a letter and will see whether it exists in the word or not and at what location.\n If you write more than one letter, you are guessing the whole word.\nIf you win or lose a round, your score is adjusted and the next round starts immediately.\nGood luck!");
-
+   public void run() {
       printGameStatus(cntr.startGame());
+      printPrompt();
 
       while (true) {
-         System.out.print(">: ");
          Scanner in = new Scanner(System.in);
          String input = in.next();
          if (input.trim().length() == 0) {
             continue;
          } else if (input.trim().length() == 1) {
             Guess g = new Guess(input.charAt(0));
-            StatusReport reply = cntr.makeGuess(g);
-            printGameStatus(reply);
+            cntr.makeGuess(g, new Printer()); //printer will print to output when thread done with getting the result of the guess
          } else {
             Guess g = new Guess(input.trim());
-            StatusReport reply = cntr.makeGuess(g);
-            printGameStatus(reply);
+            cntr.makeGuess(g, new Printer());
          }
       }
+
+   }
+   public void start() {
+      System.out.println("Welcome to hangman!");
+      System.out.println("You will be given a random word to guess. If you write one letter, you guess at a letter and will see whether it exists in the word or not and at what location.\n If you write more than one letter, you are guessing the whole word.\nIf you win or lose a round, your score is adjusted and the next round starts immediately.\nGood luck!");
+      new Thread(this).start();
    }
 
-   private void printGameStatus(StatusReport status) {
+   private synchronized void printGameStatus(StatusReport status) {
       StringBuilder all = new StringBuilder();
       all.append("Your current score is ");
       all.append(status.getScore());
@@ -65,5 +66,16 @@ public class UserInterface {
       }
       all.append(word);
       System.out.println(all.toString());
+   }
+
+   private void printPrompt() {
+      System.out.print(">: ");
+   }
+
+   private class Printer implements Consumer {
+      public void accept(Object toPrint) {
+            printGameStatus((StatusReport) toPrint);
+            printPrompt();
+      }
    }
 }

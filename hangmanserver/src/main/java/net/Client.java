@@ -42,8 +42,6 @@ public class Client implements Runnable {
          try {
             Guess newGuess = (Guess) from.readObject();
 
-            System.out.println(newGuess.toString());
-
             StatusReport reply = gameInstance.makeGuess(newGuess);
 
             System.out.println("Sending StatusReport:");
@@ -54,8 +52,7 @@ public class Client implements Runnable {
             to.reset(); //otherwise old objects are cached and old messages can mess up the communication
          } catch (IOException e) {
             disconnect();
-            e.printStackTrace();
-            System.err.println("Server failed while receiving a guess from client");
+            System.err.println("Guess failed or client disconnected.");
          } catch (ClassNotFoundException e) {
             disconnect();
             e.printStackTrace();

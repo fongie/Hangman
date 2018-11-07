@@ -39,7 +39,6 @@ public class Connection {
       StatusReport report = null;
       try {
          report = (StatusReport) receive.readObject();
-         //System.out.println(report.toString());
       } catch (IOException e) {
          e.printStackTrace();
       } catch (ClassNotFoundException e) {
@@ -50,7 +49,6 @@ public class Connection {
 
    public StatusReport makeGuess(Guess guess) {
       try {
-         //System.out.println(guess.toString());
          send.writeObject(guess);
          send.flush();
          send.reset();
