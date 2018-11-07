@@ -20,17 +20,25 @@ public class UserInterface {
    public void start() {
 
       System.out.println("Welcome to hangman!");
-      System.out.println("You will be given a random word to guess. If you write one letter, you guess at a letter and will see whether it exists in the word or not and at what location. If you write more than one letter, you are guessing the whole word.");
+      System.out.println("You will be given a random word to guess. If you write one letter, you guess at a letter and will see whether it exists in the word or not and at what location.\n If you write more than one letter, you are guessing the whole word.\nIf you win or lose a round, your score is adjusted and the next round starts immediately.\nGood luck!");
 
       printGameStatus(cntr.startGame());
 
       while (true) {
          System.out.print(">: ");
-         Scanner input = new Scanner(System.in);
-         String c = input.next();
-         Guess g = new Guess(c.charAt(0));
-         StatusReport reply = cntr.makeGuess(g);
-         printGameStatus(reply);
+         Scanner in = new Scanner(System.in);
+         String input = in.next();
+         if (input.trim().length() == 0) {
+            continue;
+         } else if (input.trim().length() == 1) {
+            Guess g = new Guess(input.charAt(0));
+            StatusReport reply = cntr.makeGuess(g);
+            printGameStatus(reply);
+         } else {
+            Guess g = new Guess(input.trim());
+            StatusReport reply = cntr.makeGuess(g);
+            printGameStatus(reply);
+         }
       }
    }
 

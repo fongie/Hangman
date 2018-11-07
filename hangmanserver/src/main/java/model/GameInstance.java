@@ -89,11 +89,13 @@ public class GameInstance {
    private void win() {
       score++;
       System.out.println("You win");
+      startNewGame();
    }
 
    private void lose() {
       score--;
       System.out.println("You lost");
+      startNewGame();
    }
 
    private void startNewGame() {
