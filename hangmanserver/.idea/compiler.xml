@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="hangman" />
         <module name="HangmanServer" />
+        <module name="hangmanserver" />
       </profile>
     </annotationProcessing>
   </component>
