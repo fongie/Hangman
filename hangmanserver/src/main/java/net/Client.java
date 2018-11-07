@@ -9,13 +9,17 @@ import java.net.Socket;
 
 public class Client implements Runnable {
 
+   private Server server;
    private Socket socket;
    private GameInstance gameInstance;
    private ObjectInputStream from;
    private ObjectOutputStream to;
+   private boolean connected;
 
-   Client(Socket socket) {
+   Client(Socket socket, Server server) {
+      this.server = server;
       this.socket = socket;
+      this.connected = true;
    }
 
    public void run() {
@@ -34,6 +38,7 @@ public class Client implements Runnable {
          System.err.println("Server failed while creating a listening socket.");
       }
 
+      while (connected) {
          try {
             Guess newGuess = (Guess) from.readObject();
 
@@ -48,11 +53,24 @@ public class Client implements Runnable {
             to.flush();
             to.reset(); //otherwise old objects are cached and old messages can mess up the communication
          } catch (IOException e) {
+            disconnect();
             e.printStackTrace();
             System.err.println("Server failed while receiving a guess from client");
          } catch (ClassNotFoundException e) {
+            disconnect();
             e.printStackTrace();
             System.err.println("Server failed due to Guess class not being found");
          }
       }
+   }
+
+   private void disconnect() {
+      try {
+         socket.close();
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+      connected = false;
+      server.removeClient(this);
+   }
 }

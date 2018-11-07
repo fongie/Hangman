@@ -48,12 +48,18 @@ public class Server {
    private void connectNewClient(Socket socket) throws SocketException {
       socket.setSoLinger(true,LINGER_TIME);
       socket.setSoTimeout(HALF_HOUR);
-      Client client = new Client(socket); //create new gameclient
+      Client client = new Client(socket, this); //create new gameclient
       synchronized (clients) { //to avoid race condition when adding new clients
          clients.add(client);
       }
       Thread thread = new Thread(client);
       thread.setPriority(Thread.MAX_PRIORITY);
       thread.start(); //start client in own thread (so many can play at once)
+   }
+
+   void removeClient(Client client) {
+      synchronized (clients) {
+         clients.remove(client);
+      }
    }
 }
