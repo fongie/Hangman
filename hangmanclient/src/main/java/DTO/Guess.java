@@ -2,6 +2,9 @@ package DTO;
 
 import java.io.Serializable;
 
+/**
+ * Represents a player's Guess, a letter or word.
+ */
 public class Guess implements Serializable {
    private String word;
    private char letter;

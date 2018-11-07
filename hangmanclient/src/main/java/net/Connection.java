@@ -9,6 +9,9 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+/**
+ * Handles server connection and server calls
+ */
 public class Connection {
    private static final String HOST = "192.168.0.2";
    private static final int PORT = 8080;
@@ -19,6 +22,9 @@ public class Connection {
    private ObjectInputStream receive;
    private ObjectOutputStream send;
 
+   /**
+    * Constructor, connects and sets up output and input streams to the server.
+    */
    public Connection() {
 
       socket = new Socket();
@@ -35,10 +41,19 @@ public class Connection {
       }
    }
 
+   /**
+    * Starting the connection means receiving a first report on the first word (before guesses)
+    * @return A StatusReport
+    */
    public StatusReport start() {
       return waitForReport();
    }
 
+   /**
+    * Send a guess to the server and wait for a reply on the current game's status
+    * @param guess
+    * @return A StatusReport
+    */
    public StatusReport makeGuess(Guess guess) {
       /* test threading
       try {
@@ -70,5 +85,4 @@ public class Connection {
       }
       return report;
    }
-
 }

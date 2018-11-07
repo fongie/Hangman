@@ -3,6 +3,9 @@ package DTO;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * Represents a Status Report sent from the server, with info on the state of the game.
+ */
 public class StatusReport implements Serializable {
    private final int wordLength;
    private final int remainingAttempts;

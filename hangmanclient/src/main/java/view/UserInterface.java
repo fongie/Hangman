@@ -14,19 +14,27 @@ import java.util.function.Consumer;
 public class UserInterface implements Runnable {
    private Controller cntr;
 
+   /**
+    * Constructor for User Interface
+    */
    public UserInterface() {
       cntr = new Controller();
    }
 
+   /**
+    * Start the user interface
+    */
    public void start() {
       System.out.println("Welcome to hangman!");
       System.out.println("You will be given a random word to guess. If you write one letter, you guess at a letter and will see whether it exists in the word or not and at what location.\n If you write more than one letter, you are guessing the whole word.\nIf you win or lose a round, your score is adjusted and the next round starts immediately.\nGood luck!");
       new Thread(this).start();
    }
 
+   /**
+    * Loop to insert commands while playing the game
+    */
    public void run() {
-      printGameStatus(cntr.startGame());
-      printPrompt();
+      cntr.startGame(new Printer());
 
       while (true) {
          Scanner in = new Scanner(System.in);

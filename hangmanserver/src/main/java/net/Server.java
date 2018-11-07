@@ -1,27 +1,32 @@
 package net;
 
-import contr.Controller;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 
+/**
+ * Entrypoint class to the server, which serves clients that wish to play Hangman
+ */
 public class Server {
 
    private static final int PORT = 8080;
    private static final int LINGER_TIME = 5000;
    private static final int HALF_HOUR = 1800000;
 
-   private Controller cntr;
    private ArrayList<Client> clients;
 
+   /**
+    * Constructor
+    */
    public Server() {
-      cntr = new Controller();
       clients = new ArrayList<Client>();
    }
 
+   /**
+    * Initialize serversocket and start serving clients forever
+    */
    public void start() {
       try {
          ServerSocket serverSocket = new ServerSocket(PORT);
@@ -53,10 +58,14 @@ public class Server {
          clients.add(client);
       }
       Thread thread = new Thread(client);
-      thread.setPriority(Thread.MAX_PRIORITY);
+      thread.setPriority(Thread.MAX_PRIORITY); //to prioritize clients playing over connecting new clients
       thread.start(); //start client in own thread (so many can play at once)
    }
 
+   /**
+    * Remove a disconnected client from list of clients
+    * @param client
+    */
    void removeClient(Client client) {
       synchronized (clients) {
          clients.remove(client);

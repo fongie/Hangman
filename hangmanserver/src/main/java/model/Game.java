@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * Starts a new game instance when a client connects
+ * Handles all game logic for Hangman
  */
-public class GameInstance {
+public class Game {
 
    private String word;
    private int wordLength;
@@ -19,12 +19,20 @@ public class GameInstance {
    private int score;
    private ArrayList<LetterPosition> correctLetters;
 
-   public GameInstance() {
+   /**
+    * Constructor
+    */
+   public Game() {
       score = 0;
       startNewGame();
    }
 
+   /**
+    * Create a report on the state of the game (not including "cheats" such as the actual word)
+    * @return
+    */
    public StatusReport makeReport() {
+      return new StatusReport(wordLength,remainingAttempts,score,correctLetters);
       /*
       JsonArrayBuilder jsonLetters = Json.createArrayBuilder();
       for (LetterPosition lp : correctLetters) {
@@ -40,9 +48,13 @@ public class GameInstance {
       System.out.println(json.toString());
       */
       //System.out.println(report);
-      return new StatusReport(wordLength,remainingAttempts,score,correctLetters);
    }
 
+   /**
+    * Make a guess on a letter or the full word
+    * @param guess
+    * @return A StatusReport
+    */
    public StatusReport makeGuess(Guess guess) {
       if (guess.isGuessedFullWord()) {
          guessWord(guess.getWord());
@@ -88,13 +100,11 @@ public class GameInstance {
    }
    private void win() {
       score++;
-      System.out.println("You win");
       startNewGame();
    }
 
    private void lose() {
       score--;
-      System.out.println("You lost");
       startNewGame();
    }
 
@@ -105,16 +115,12 @@ public class GameInstance {
       correctLetters = new ArrayList<LetterPosition>();
 
       System.out.println("Starting new game with word: " + word);
-      /*
-      guessLetter('o');
-      guessWord("hello");
-      */
    }
 
    private String getRandomWord() {
       Random rand = new Random();
       int randomWord = rand.nextInt(51525) + 1; //words list has 51525 words, I could count words programatically but I dont intend to change wordlist and it takes time so I hardcode it
-      BufferedReader reader = new BufferedReader(new InputStreamReader(GameInstance.class.getResourceAsStream("/words.txt")));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(Game.class.getResourceAsStream("/words.txt")));
 
       try {
          int i = 0;
