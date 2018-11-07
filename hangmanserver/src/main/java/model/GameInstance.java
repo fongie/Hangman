@@ -3,7 +3,6 @@ package model;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
@@ -24,20 +23,6 @@ public class GameInstance implements Runnable {
    }
 
    private void reportStatus() {
-      /*
-      StringBuilder sb = new StringBuilder();
-      sb.append(word);
-      sb.append(" ");
-      sb.append(wordLength);
-      sb.append(" ");
-      sb.append(remainingAttempts);
-      sb.append(" ");
-      for (LetterPosition lp : correctLetters) {
-         sb.append(lp.toString());
-      }
-
-      System.out.println(sb.toString());
-      */
       JsonArrayBuilder jsonLetters = Json.createArrayBuilder();
       for (LetterPosition lp : correctLetters) {
          jsonLetters.add(Json.createObjectBuilder().add("char", lp.getLetter()).add("pos", lp.getPosition()));
@@ -51,6 +36,15 @@ public class GameInstance implements Runnable {
       System.out.println(json.toString());
    }
 
+   public void guessWord(String guessedWord) {
+      if (guessedWord.equals(word)) {
+         win();
+      } else {
+         remainingAttempts--;
+         checkRemainingAttempts();
+         reportStatus();
+      }
+   }
    public void guessLetter(char letter) {
       remainingAttempts--;
       for (LetterPosition lp : correctLetters) { //do nothing if letter was already guessed
@@ -67,7 +61,23 @@ public class GameInstance implements Runnable {
          }
       }
 
+      checkRemainingAttempts();
       reportStatus();
+   }
+
+   private void checkRemainingAttempts() {
+      if (remainingAttempts < 1) {
+         lose();
+      }
+   }
+   private void win() {
+      score++;
+      System.out.println("You win");
+   }
+
+   private void lose() {
+      score--;
+      System.out.println("You lost");
    }
 
    public GameInstance() {
@@ -81,9 +91,8 @@ public class GameInstance implements Runnable {
       remainingAttempts = word.length();
       correctLetters = new ArrayList<LetterPosition>();
 
-      //System.out.println(word);
-      //System.out.println(remainingAttempts);
       guessLetter('o');
+      guessWord("hello");
    }
 
    private String getRandomWord() {
