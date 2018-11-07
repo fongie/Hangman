@@ -1,8 +1,9 @@
 package model;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
+import DTO.Guess;
+import DTO.LetterPosition;
+import DTO.StatusReport;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
@@ -10,7 +11,7 @@ import java.util.Random;
 /**
  * Starts a new game instance when a client connects
  */
-public class GameInstance implements Runnable {
+public class GameInstance {
 
    private String word;
    private int wordLength;
@@ -18,34 +19,47 @@ public class GameInstance implements Runnable {
    private int score;
    private ArrayList<LetterPosition> correctLetters;
 
-   public void run() {
-
+   public GameInstance() {
+      score = 0;
+      startNewGame();
    }
 
-   private void reportStatus() {
+   private StatusReport makeReport() {
+      /*
       JsonArrayBuilder jsonLetters = Json.createArrayBuilder();
       for (LetterPosition lp : correctLetters) {
          jsonLetters.add(Json.createObjectBuilder().add("char", lp.getLetter()).add("pos", lp.getPosition()));
       }
       JsonObject json = Json.createObjectBuilder()
+            .add("score", score)
             .add("wordLength", wordLength)
             .add("remainingAttempts", remainingAttempts)
             .add("correctLetters", jsonLetters)
             .build();
 
       System.out.println(json.toString());
+      */
+      //System.out.println(report);
+      return new StatusReport(wordLength,remainingAttempts,score,correctLetters);
    }
 
-   public void guessWord(String guessedWord) {
+   public StatusReport makeGuess(Guess guess) {
+      if (guess.isGuessedFullWord()) {
+         guessWord(guess.getWord());
+      } else if (!guess.isGuessedFullWord()) {
+         guessLetter(guess.getLetter());
+      }
+      return makeReport();
+   }
+   private void guessWord(String guessedWord) {
       if (guessedWord.equals(word)) {
          win();
       } else {
          remainingAttempts--;
          checkRemainingAttempts();
-         reportStatus();
       }
    }
-   public void guessLetter(char letter) {
+   private void guessLetter(char letter) {
       remainingAttempts--;
       for (LetterPosition lp : correctLetters) { //do nothing if letter was already guessed
          if (lp.getLetter() == letter) {
@@ -62,10 +76,12 @@ public class GameInstance implements Runnable {
       }
 
       checkRemainingAttempts();
-      reportStatus();
    }
 
    private void checkRemainingAttempts() {
+      if (wordLength == correctLetters.size()) {
+         win();
+      }
       if (remainingAttempts < 1) {
          lose();
       }
@@ -80,19 +96,16 @@ public class GameInstance implements Runnable {
       System.out.println("You lost");
    }
 
-   public GameInstance() {
-      score = 0;
-      startNewGame();
-   }
-
    private void startNewGame() {
       word = getRandomWord();
       wordLength = word.length();
       remainingAttempts = word.length();
       correctLetters = new ArrayList<LetterPosition>();
 
+      /*
       guessLetter('o');
       guessWord("hello");
+      */
    }
 
    private String getRandomWord() {
@@ -106,7 +119,9 @@ public class GameInstance implements Runnable {
             reader.readLine();
             i++;
          }
-         return reader.readLine().toLowerCase();
+         String word = reader.readLine().toLowerCase();
+         reader.close();
+         return word;
       } catch (IOException e) {
          e.printStackTrace();
       }

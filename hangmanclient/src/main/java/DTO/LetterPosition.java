@@ -1,6 +1,11 @@
-package model;
+package DTO;
 
-public class LetterPosition {
+import java.io.Serializable;
+
+/**
+ * Represents a correctly guessed letter and its position in the word
+ */
+public class LetterPosition implements Serializable {
    private char letter;
    private int position;
 

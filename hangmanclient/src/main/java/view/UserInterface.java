@@ -1,5 +1,6 @@
 package view;
 
+import DTO.Guess;
 import contr.Controller;
 
 import java.util.Scanner;
@@ -20,7 +21,13 @@ public class UserInterface {
 
       cntr.startGame();
 
-      //Scanner input = new Scanner(System.in);
+      Scanner input = new Scanner(System.in);
+      String c = input.next();
+
+      Guess g = new Guess(c.charAt(0));
+
+      cntr.makeGuess(g);
    }
+
 
 }
