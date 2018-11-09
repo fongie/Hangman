@@ -1,3 +1,8 @@
 */.idea/
 */target/
 *.iml
+*.aux
+*.log
+*.out
+*.pdf
+*.gz
