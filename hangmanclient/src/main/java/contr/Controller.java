@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * Controller responsible for threading on server calls
+ * Controller
  */
 public class Controller {
    private Connection conn;

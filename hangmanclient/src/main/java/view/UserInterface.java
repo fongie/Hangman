@@ -44,7 +44,7 @@ public class UserInterface implements Runnable {
             continue;
          } else if (input.trim().length() == 1) {
             Guess g = new Guess(input.charAt(0));
-            cntr.makeGuess(g); //printer will print to output when thread done with getting the result of the guess
+            cntr.makeGuess(g);
          } else {
             Guess g = new Guess(input.trim());
             cntr.makeGuess(g);
@@ -56,6 +56,7 @@ public class UserInterface implements Runnable {
    private class Printer implements Observer {
       public void print(Object o) {
          printGameStatus((StatusReport) o);
+         printPrompt();
       }
       private void printGameStatus(StatusReport status) {
          synchronized (UserInterface.this){
@@ -87,10 +88,6 @@ public class UserInterface implements Runnable {
          synchronized (UserInterface.this) {
             System.out.print(">: ");
          }
-      }
-      public void accept(Object toPrint) { //when thread completes (in controller), accept is called with return value
-            printGameStatus((StatusReport) toPrint);
-            printPrompt();
       }
    }
 }

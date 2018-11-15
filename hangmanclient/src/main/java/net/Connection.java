@@ -18,6 +18,7 @@ public class Connection implements Runnable {
    private static final int PORT = 8080;
 
    private Observer printer;
+   private boolean connected;
 
    private Selector selector;
    private SocketChannel socketChannel;
@@ -36,9 +37,10 @@ public class Connection implements Runnable {
    @Override
    public void run() {
       start();
-      while (true) {
+      while (true && connected) {
          communicate();
       }
+      exit();
    }
 
    public void makeGuess(Guess guess) {
@@ -91,8 +93,8 @@ public class Connection implements Runnable {
             }
          }
       } catch (IOException e) {
-         e.printStackTrace();
-         System.err.println("Selection error");
+         connected = false;
+         System.err.println("Disconnected");
       }
 
    }
@@ -118,6 +120,7 @@ public class Connection implements Runnable {
          for (SelectionKey key : selector.selectedKeys()) { //because its a "SET" we cant just get the key but have to use an iterator..
             selector.selectedKeys().remove(key);
             socketChannel.finishConnect();
+            connected = true;
             System.out.println("Connected to server!");
             key.interestOps(SelectionKey.OP_READ);
          }
@@ -127,5 +130,17 @@ public class Connection implements Runnable {
       }
 
    }
+   private void exit() {
+      try {
+         selector.close();
+         socketChannel.close();
+      } catch (IOException e) {
+         System.err.println("Did not exit gracefully");
+      }
+      ;
+      System.exit(0);
+
+   }
+
 
 }
