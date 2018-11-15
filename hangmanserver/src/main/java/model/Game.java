@@ -25,6 +25,8 @@ public class Game {
    public Game() {
       score = 0;
       startNewGame();
+
+      //TODO make words.txt reading in a separate thread for optional task
    }
 
    /**

@@ -5,85 +5,82 @@ import DTO.StatusReport;
 import model.Game;
 
 import java.io.*;
-import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 /**
  * Handles a unique client that connected to the server and server-client communication concerning their game
  */
-public class Client implements Runnable {
+public class Client {
 
    private Server server;
-   private Socket socket;
+   private SocketChannel channel;
    private Game game;
-   private ObjectInputStream from;
-   private ObjectOutputStream to;
-   private boolean connected;
+   private ByteBuffer buffer;
 
    /**
     * Constructor
-    * @param socket
+    * @param channel
     * @param server
     */
-   Client(Socket socket, Server server) {
+   Client(SocketChannel channel, Server server) {
       this.server = server;
-      this.socket = socket;
-      this.connected = true;
-   }
-
-   /**
-    * Starts main game loop that reads and writes to TCP sockets using game logic in the Game class
-    */
-   public void run() {
-      start();
-      while (connected) {
-         try {
-            Guess newGuess = (Guess) from.readObject();
-            StatusReport reply = game.makeGuess(newGuess);
-            writeObject(reply);
-         } catch (IOException e) {
-            disconnect();
-            System.err.println("Client disconnected.");
-         } catch (ClassNotFoundException e) {
-            disconnect();
-            e.printStackTrace();
-            System.err.println("Server failed due to Guess class not being found");
-         }
+      this.channel = channel;
+      try {
+         start();
+      } catch (IOException e) {
+         System.err.println("Could not start client handler");
       }
    }
-
-   private void start() {
-      System.out.println("Starting new client thread!");
+   ByteBuffer getBuffer() {
+      return buffer;
+   }
+   private void start() throws IOException {
+      System.out.println("Starting new client!");
       game = new Game();
+      prepareWrite(game.makeReport());
 
-      try {
-         from = new ObjectInputStream(socket.getInputStream());
-         to = new ObjectOutputStream(socket.getOutputStream());
-         writeObject(game.makeReport()); //at game start send client info on word
-      } catch (IOException e) {
-         e.printStackTrace();
-         System.err.println("Server failed while creating a listening socket.");
-      }
    }
-   private void disconnect() {
+   void receiveGuess() {
+      System.out.println("RECEIVED GUESS");
+      ByteBuffer buffer = ByteBuffer.allocate(256);
       try {
-         socket.close();
+         channel.read(buffer);
+         ByteArrayInputStream byteIn = new ByteArrayInputStream(buffer.array());
+         ObjectInputStream oIn = new ObjectInputStream(byteIn);
+
+         Guess guess = null;
+         try {
+            guess = (Guess) oIn.readObject();
+         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+         }
+         System.out.println(guess.toString());
+
+         prepareWrite(game.makeGuess(guess));
       } catch (IOException e) {
          e.printStackTrace();
       }
-      connected = false;
-      server.removeClient(this);
+
+   }
+   private void prepareWrite(StatusReport obj) throws IOException {
+      //prepare byte buffer
+      ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+      ObjectOutputStream oOut = new ObjectOutputStream(byteOut);
+
+      System.out.println(obj.toString());
+
+      //put statusreport in buffer
+      oOut.writeObject(obj);
+      oOut.flush();
+      oOut.close();
+
+      buffer = ByteBuffer.wrap(byteOut.toByteArray());
+
+      System.out.println("Prepared to write!");
+
+      //send buffer to write to channel
    }
 
-   private void writeObject(StatusReport obj) {
-      try {
-         to.writeObject(obj);
-         to.flush();
-         to.reset(); //otherwise old objects are cached and old messages can mess up the communication
-      } catch (IOException e) {
-         disconnect();
-         System.err.println("Guess failed or client disconnected.");
-         e.printStackTrace();
-      }
-   }
 
 }

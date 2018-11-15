@@ -51,38 +51,39 @@ public class UserInterface implements Runnable {
       }
    }
 
-   private synchronized void printPrompt() {
-      System.out.print(">: ");
-   }
 
-   //as far as I understand, synchronized means "one thread per instance of the class" can operate on it,
-   //so since theres only one thread for this userinterface class running then only one "guess" thread (Printer class) can
-   //write at a time
-   private synchronized void printGameStatus(StatusReport status) {
-      StringBuilder all = new StringBuilder();
-      all.append("Your current score is ");
-      all.append(status.getScore());
-      all.append(".\n");
-      all.append("You have ");
-      all.append(status.getRemainingAttempts());
-      all.append(" attempts remaining.");
-      all.append("\n");
-
-      StringBuilder word = new StringBuilder();
-      for (int i = 0; i < status.getWordLength(); i++) {
-         word.append("_");
-      }
-      for (LetterPosition lp : status.getCorrectLetters()) {
-         word.setCharAt(lp.getPosition(), lp.getLetter());
-      }
-
-      for (int i = 1; i < status.getWordLength() * 2; i += 2) {
-         word.insert(i, " ");
-      }
-      all.append(word);
-      System.out.println(all.toString());
-   }
    private class Printer implements Consumer {
+      private void printGameStatus(StatusReport status) {
+         synchronized (UserInterface.this){
+            StringBuilder all = new StringBuilder();
+            all.append("Your current score is ");
+            all.append(status.getScore());
+            all.append(".\n");
+            all.append("You have ");
+            all.append(status.getRemainingAttempts());
+            all.append(" attempts remaining.");
+            all.append("\n");
+
+            StringBuilder word = new StringBuilder();
+            for (int i = 0; i < status.getWordLength(); i++) {
+               word.append("_");
+            }
+            for (LetterPosition lp : status.getCorrectLetters()) {
+               word.setCharAt(lp.getPosition(), lp.getLetter());
+            }
+
+            for (int i = 1; i < status.getWordLength() * 2; i += 2) {
+               word.insert(i, " ");
+            }
+            all.append(word);
+            System.out.println(all.toString());
+         }
+      }
+      private void printPrompt() {
+         synchronized (UserInterface.this) {
+            System.out.print(">: ");
+         }
+      }
       public void accept(Object toPrint) { //when thread completes (in controller), accept is called with return value
             printGameStatus((StatusReport) toPrint);
             printPrompt();

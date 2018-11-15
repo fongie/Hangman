@@ -3,86 +3,128 @@ package net;
 import DTO.Guess;
 import DTO.StatusReport;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 
 /**
  * Handles server connection and server calls
  */
-public class Connection {
+public class Connection implements Runnable {
    private static final String HOST = "192.168.0.2";
    private static final int PORT = 8080;
    private static final int HALF_HOUR = 1800000;
    private static final int HALF_MINUTE = 30000;
 
-   private Socket socket;
-   private ObjectInputStream receive;
-   private ObjectOutputStream send;
+   private Selector selector;
+   private SocketChannel socketChannel;
+
+   private boolean readyToSend;
+   private ByteBuffer sending;
 
    /**
-    * Constructor, connects and sets up output and input streams to the server.
+    * Constructor, starts in new thread
     */
    public Connection() {
+      new Thread(this).start();
+   }
 
-      socket = new Socket();
-      InetSocketAddress server = new InetSocketAddress(HOST, PORT);
+   @Override
+   public void run() {
+      start();
+      while (true) {
+         communicate();
+      }
+   }
 
+   public void makeGuess(Guess guess) {
+      ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+      ObjectOutputStream oOut = null;
       try {
-         socket.connect(server, HALF_MINUTE);
-         socket.setSoTimeout(HALF_HOUR);
-         send = new ObjectOutputStream(socket.getOutputStream());
-         receive = new ObjectInputStream(socket.getInputStream());
+         oOut = new ObjectOutputStream(byteOut);
+         oOut.writeObject(guess);
+         oOut.flush();
+         oOut.close();
       } catch (IOException e) {
          e.printStackTrace();
-         System.err.println("Could not connect to server.");
       }
+      sending = ByteBuffer.wrap(byteOut.toByteArray());
+      readyToSend = true;
+
+      System.out.println("Prepared to send!");
    }
 
-   /**
-    * Starting the connection means receiving a first report on the first word (before guesses)
-    * @return A StatusReport
-    */
-   public StatusReport start() {
-      return waitForReport();
-   }
+   private void receiveReport() throws IOException {
+      ByteBuffer buffer = ByteBuffer.allocate(256);
+      socketChannel.read(buffer);
 
-   /**
-    * Send a guess to the server and wait for a reply on the current game's status
-    * @param guess
-    * @return A StatusReport
-    */
-   public StatusReport makeGuess(Guess guess) {
-      /* test threading
-      try {
-         Thread.sleep(1000);
-      } catch (InterruptedException e) {
-         e.printStackTrace();
-      }
-       */
-      try {
-         send.writeObject(guess);
-         send.flush();
-         send.reset();
-      } catch (IOException e) {
-         e.printStackTrace();
-         System.err.println("Could not send guess to server");
-      }
+      ByteArrayInputStream byteIn = new ByteArrayInputStream(buffer.array());
+      ObjectInputStream oIn = new ObjectInputStream(byteIn);
 
-      return waitForReport();
-   }
-
-   private StatusReport waitForReport() {
       StatusReport report = null;
       try {
-         report = (StatusReport) receive.readObject();
-      } catch (IOException e) {
-         e.printStackTrace();
+         report = (StatusReport) oIn.readObject();
       } catch (ClassNotFoundException e) {
          e.printStackTrace();
       }
-      return report;
+      System.out.println("RECEIVED REPORT");
+      System.out.println(report.toString());
+      //return report;
    }
+   private void communicate() {
+      try {
+         selector.select(); //blocks until something can be done with channel
+         for (SelectionKey key : selector.selectedKeys()) {
+            selector.selectedKeys().remove(key);
+            if (key.isReadable()) {
+               receiveReport();
+               key.interestOps(SelectionKey.OP_WRITE);
+            } else if (key.isWritable() && readyToSend) {
+               socketChannel.write(sending);
+               sending.clear();
+               readyToSend = false;
+               key.interestOps(SelectionKey.OP_READ);
+            }
+         }
+      } catch (IOException e) {
+         e.printStackTrace();
+         System.err.println("Selection error");
+      }
+
+   }
+
+   /**
+    * Starts the non-blocking socket communication
+    *
+    */
+   private void start() {
+      try {
+         //open channel (connect) to server
+         socketChannel = SocketChannel.open();
+         socketChannel.configureBlocking(false);
+         InetSocketAddress server = new InetSocketAddress(HOST, PORT);
+         socketChannel.connect(server);
+
+         //register selector to the channel
+         selector = Selector.open();
+         socketChannel.register(selector, SelectionKey.OP_CONNECT); //notify when connection is done
+
+         //wait for server to respond to the connection attempt and finish it
+         selector.select();
+         for (SelectionKey key : selector.selectedKeys()) { //because its a "SET" we cant just get the key but have to use an iterator..
+            selector.selectedKeys().remove(key);
+            socketChannel.finishConnect();
+            System.out.println("Connected to server!");
+            key.interestOps(SelectionKey.OP_READ);
+         }
+      } catch (IOException e) {
+         System.err.println("Could not connect to server");
+         e.printStackTrace();
+      }
+
+   }
+
 }

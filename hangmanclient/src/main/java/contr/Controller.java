@@ -19,12 +19,7 @@ public class Controller {
     * @param print Consumes a StatusReport object to print game status to user interface
     */
    public void startGame(Consumer print) {
-      CompletableFuture.supplyAsync( //runs in common thread pool
-            () -> {
-               conn = new Connection();
-               return conn.start();
-            }
-      ).thenAccept(print); //return value is consumed by Consumer print (a Printer) on thread complete
+      conn = new Connection();
    }
 
    /**
@@ -33,8 +28,6 @@ public class Controller {
     * @param print
     */
    public void makeGuess(Guess guess, Consumer print) {
-      CompletableFuture.supplyAsync( //runs in common thread pool
-            () -> conn.makeGuess(guess)
-            ).thenAccept(print); //return value is consumed by Consumer print (a Printer) on thread complete
+      conn.makeGuess(guess);
    }
 }
