@@ -33,6 +33,7 @@ public class Client {
       }
    }
    ByteBuffer getBuffer() {
+      System.out.println("Buffer size: " + buffer.array().length);
       return buffer;
    }
    private void start() throws IOException {

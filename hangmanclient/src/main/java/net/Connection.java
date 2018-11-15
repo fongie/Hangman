@@ -16,8 +16,8 @@ import java.nio.channels.SocketChannel;
 public class Connection implements Runnable {
    private static final String HOST = "192.168.0.2";
    private static final int PORT = 8080;
-   private static final int HALF_HOUR = 1800000;
-   private static final int HALF_MINUTE = 30000;
+
+   private Observer printer;
 
    private Selector selector;
    private SocketChannel socketChannel;
@@ -28,7 +28,8 @@ public class Connection implements Runnable {
    /**
     * Constructor, starts in new thread
     */
-   public Connection() {
+   public Connection(Observer printer) {
+      this.printer = printer;
       new Thread(this).start();
    }
 
@@ -53,14 +54,11 @@ public class Connection implements Runnable {
       }
       sending = ByteBuffer.wrap(byteOut.toByteArray());
       readyToSend = true;
-
-      System.out.println("Prepared to send!");
    }
 
    private void receiveReport() throws IOException {
-      ByteBuffer buffer = ByteBuffer.allocate(256);
+      ByteBuffer buffer = ByteBuffer.allocate(1024);
       socketChannel.read(buffer);
-
       ByteArrayInputStream byteIn = new ByteArrayInputStream(buffer.array());
       ObjectInputStream oIn = new ObjectInputStream(byteIn);
 
@@ -70,15 +68,18 @@ public class Connection implements Runnable {
       } catch (ClassNotFoundException e) {
          e.printStackTrace();
       }
-      System.out.println("RECEIVED REPORT");
-      System.out.println(report.toString());
-      //return report;
+      oIn.close();
+
+      printer.print(report);
    }
    private void communicate() {
       try {
          selector.select(); //blocks until something can be done with channel
          for (SelectionKey key : selector.selectedKeys()) {
             selector.selectedKeys().remove(key);
+            if (!key.isValid()) {
+               continue;
+            }
             if (key.isReadable()) {
                receiveReport();
                key.interestOps(SelectionKey.OP_WRITE);
@@ -97,7 +98,7 @@ public class Connection implements Runnable {
    }
 
    /**
-    * Starts the non-blocking socket communication
+    * Starts the non-blocking socket communication, connects to server
     *
     */
    private void start() {

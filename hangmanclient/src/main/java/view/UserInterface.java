@@ -4,6 +4,7 @@ import DTO.Guess;
 import DTO.LetterPosition;
 import DTO.StatusReport;
 import contr.Controller;
+import net.Observer;
 
 import java.util.Scanner;
 import java.util.function.Consumer;
@@ -43,16 +44,19 @@ public class UserInterface implements Runnable {
             continue;
          } else if (input.trim().length() == 1) {
             Guess g = new Guess(input.charAt(0));
-            cntr.makeGuess(g, new Printer()); //printer will print to output when thread done with getting the result of the guess
+            cntr.makeGuess(g); //printer will print to output when thread done with getting the result of the guess
          } else {
             Guess g = new Guess(input.trim());
-            cntr.makeGuess(g, new Printer());
+            cntr.makeGuess(g);
          }
       }
    }
 
 
-   private class Printer implements Consumer {
+   private class Printer implements Observer {
+      public void print(Object o) {
+         printGameStatus((StatusReport) o);
+      }
       private void printGameStatus(StatusReport status) {
          synchronized (UserInterface.this){
             StringBuilder all = new StringBuilder();
