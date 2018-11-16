@@ -16,7 +16,7 @@ public class Controller {
    }
 
    /**
-    * Set up connection to server and start the game (get the first info from server)
+    * Set up connection to server and start the game
     * @param print Consumes a StatusReport object to print game status to user interface
     */
    public void startGame(Observer print) {
@@ -24,7 +24,7 @@ public class Controller {
    }
 
    /**
-    * Sends a guess to the server and receives a status report
+    * Sends a guess to the server.
     * @param guess
     */
    public void makeGuess(Guess guess) {

@@ -33,38 +33,49 @@ public class Client {
          System.err.println("Could not start client handler");
       }
    }
+
+   /**
+    * Get the buffer containing an object to be sent from the client
+    * @return The buffer
+    */
    ByteBuffer getBuffer() {
-      System.out.println("Buffer size: " + buffer.array().length);
       return buffer;
+   }
+
+   /**
+    * Read from channel a received object from client, that is a Guess. Make the guess and prepare to sent a StatusReport back to the client.
+    * @throws IOException
+    */
+   void receiveGuess() throws IOException {
+      ByteBuffer buffer = ByteBuffer.allocate(256);
+      channel.read(buffer);
+      ByteArrayInputStream byteIn = new ByteArrayInputStream(buffer.array());
+      ObjectInputStream oIn = new ObjectInputStream(byteIn);
+
+      Guess guess = null;
+      try {
+         guess = (Guess) oIn.readObject();
+      } catch (ClassNotFoundException e) {
+         e.printStackTrace();
+      }
+
+      prepareWrite(game.makeGuess(guess));
    }
    private void start() throws IOException {
       System.out.println("Starting new client!");
       ExecutorService executor = Executors.newSingleThreadExecutor();
-      Future<Game> future = executor.submit(() -> new Game());
+      Future<Game> future = executor.submit(() -> new Game()); //Game constructor does IO with file handling
       try {
          game = future.get();
       } catch (InterruptedException e) {
+         System.err.println("Could not start a new game");
          e.printStackTrace();
       } catch (ExecutionException e) {
+         System.err.println("Could not start a new game");
          e.printStackTrace();
       }
       prepareWrite(game.makeReport());
 
-   }
-   void receiveGuess() throws IOException {
-      ByteBuffer buffer = ByteBuffer.allocate(256);
-         channel.read(buffer);
-         ByteArrayInputStream byteIn = new ByteArrayInputStream(buffer.array());
-         ObjectInputStream oIn = new ObjectInputStream(byteIn);
-
-         Guess guess = null;
-         try {
-            guess = (Guess) oIn.readObject();
-         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-         }
-
-         prepareWrite(game.makeGuess(guess));
    }
    private void prepareWrite(StatusReport obj) throws IOException {
       //prepare byte buffer
@@ -80,6 +91,10 @@ public class Client {
 
       buffer = ByteBuffer.wrap(byteOut.toByteArray());
    }
+
+   /**
+    * Disconnect the client
+    */
    void disconnect() {
       try {
          channel.close();

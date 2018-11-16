@@ -7,9 +7,6 @@ import DTO.StatusReport;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * Handles all game logic for Hangman
@@ -23,7 +20,7 @@ public class Game {
    private ArrayList<LetterPosition> correctLetters;
 
    /**
-    * Constructor
+    * Constructor. Starts a new game.
     */
    public Game() {
       score = 0;

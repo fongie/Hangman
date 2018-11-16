@@ -27,13 +27,16 @@ public class Connection implements Runnable {
    private ByteBuffer sending;
 
    /**
-    * Constructor, starts in new thread
+    * Constructor, starts in new thread to avoid blocking the user interface
     */
    public Connection(Observer printer) {
       this.printer = printer;
       new Thread(this).start();
    }
 
+   /**
+    * Initialize communication to server and start communicating with it. Loop until disconnected, then exit.
+    */
    @Override
    public void run() {
       start();
@@ -43,6 +46,10 @@ public class Connection implements Runnable {
       exit();
    }
 
+   /**
+    * Send a Guess object to the server
+    * @param guess
+    */
    public void makeGuess(Guess guess) {
       ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
       ObjectOutputStream oOut = null;
@@ -96,13 +103,8 @@ public class Connection implements Runnable {
          connected = false;
          System.err.println("Disconnected");
       }
-
    }
 
-   /**
-    * Starts the non-blocking socket communication, connects to server
-    *
-    */
    private void start() {
       try {
          //open channel (connect) to server
@@ -122,7 +124,7 @@ public class Connection implements Runnable {
             socketChannel.finishConnect();
             connected = true;
             System.out.println("Connected to server!");
-            key.interestOps(SelectionKey.OP_READ);
+            key.interestOps(SelectionKey.OP_READ); //get ready for normal communication (read statusreport response is first)
          }
       } catch (IOException e) {
          System.err.println("Could not connect to server");
@@ -141,6 +143,4 @@ public class Connection implements Runnable {
       System.exit(0);
 
    }
-
-
 }

@@ -1,6 +1,5 @@
 package net;
 
-import DTO.Guess;
 
 import java.io.IOException;
 import java.net.*;
@@ -8,7 +7,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -75,8 +73,6 @@ public class Server {
             SocketChannel channel = (SocketChannel) key.channel();
             channel.write(client.getBuffer());
             key.interestOps(SelectionKey.OP_READ);
-            //client must have prepared a byte buffered StatusReport from game to send
-            //channel.write that buffer
          }
       }
    }
