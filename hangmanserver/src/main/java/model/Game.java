@@ -7,6 +7,9 @@ import DTO.StatusReport;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Handles all game logic for Hangman
@@ -25,8 +28,6 @@ public class Game {
    public Game() {
       score = 0;
       startNewGame();
-
-      //TODO make words.txt reading in a separate thread for optional task
    }
 
    /**
@@ -35,21 +36,6 @@ public class Game {
     */
    public StatusReport makeReport() {
       return new StatusReport(wordLength,remainingAttempts,score,correctLetters);
-      /*
-      JsonArrayBuilder jsonLetters = Json.createArrayBuilder();
-      for (LetterPosition lp : correctLetters) {
-         jsonLetters.add(Json.createObjectBuilder().add("char", lp.getLetter()).add("pos", lp.getPosition()));
-      }
-      JsonObject json = Json.createObjectBuilder()
-            .add("score", score)
-            .add("wordLength", wordLength)
-            .add("remainingAttempts", remainingAttempts)
-            .add("correctLetters", jsonLetters)
-            .build();
-
-      System.out.println(json.toString());
-      */
-      //System.out.println(report);
    }
 
    /**

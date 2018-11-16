@@ -7,6 +7,7 @@ import model.Game;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.*;
 
 /**
  * Handles a unique client that connected to the server and server-client communication concerning their game
@@ -38,7 +39,15 @@ public class Client {
    }
    private void start() throws IOException {
       System.out.println("Starting new client!");
-      game = new Game();
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      Future<Game> future = executor.submit(() -> new Game());
+      try {
+         game = future.get();
+      } catch (InterruptedException e) {
+         e.printStackTrace();
+      } catch (ExecutionException e) {
+         e.printStackTrace();
+      }
       prepareWrite(game.makeReport());
 
    }
