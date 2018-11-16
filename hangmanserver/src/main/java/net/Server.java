@@ -60,13 +60,16 @@ public class Server {
          if (key.isAcceptable()) {
             connectNewClient(key);
          } else if (key.isReadable()) {
-            Client client = (Client) key.attachment();
-            client.receiveGuess();
-            key.interestOps(SelectionKey.OP_WRITE);
-            // channel.read into byte buffer
-            // convert byte buffer to Guess
-            // send guess to client and game object
-
+            try {
+               Client client = (Client) key.attachment();
+               client.receiveGuess();
+               key.interestOps(SelectionKey.OP_WRITE);
+            } catch (IOException e) {
+               System.err.println("Client disconnected");
+               Client client = (Client) key.attachment();
+               client.disconnect();
+               key.cancel();
+            }
          } else if (key.isWritable()) {
             Client client = (Client) key.attachment();
             SocketChannel channel = (SocketChannel) key.channel();
