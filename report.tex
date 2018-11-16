@@ -23,10 +23,10 @@
 \rfoot{}
 
 % Create title page
-\title{Homework 1: Hangman}
+\title{Homework 2: Hangman}
 \subtitle{Network Programming, ID1212}
 \author{Max Körlinge, korlinge@kth.se}
-\date{9 November 2018}
+\date{16 November 2018}
 
 \begin{document}
 
@@ -35,61 +35,69 @@
 
 \section{Introduction}
 
-\noindent The assignment was to develop a distributed application, in this case, a game of Hangman. The requirements were:
+\noindent The assignment was to develop a distributed application, in this case, a game of Hangman. This assignment builds on a previous assignment and it was requested that this report repeats nothing that was already mentioned in the first report. The requirements for this assignment were:
 
 \begin{itemize}
-    \item Communicate using TCP blocking sockets between client and server.
-    \item No state must be stored on the client.
-    \item Server can only send state, not complete parts of the user interface.
-    \item The user interface must be informative, so the player knows what is going on.
-    \item Client and server must be multithreaded, for a better user experience and the ability to handle several clients at once.
+    \item Communicate using non-blocking TCP sockets.
+    \item The nodes must be multithreaded and have a responsive user interface.
     \item The programmed must be designed using a layered architecture and object-oriented design principles.
+    \item The program works as expected.
 \end{itemize}
+
+There was an optional task to implement a single-threaded event loop architecture in the game server. That task was completed as well.
 
 The program was written in full by the author of this report.
 
 \section{Literature Study}
 
-To prepare for this assignment, all video material provided by the course on Sockets and Stream handling was viewed together with the code of the sample programs. Important information was gathered on how to communicate with sockets using the Java net package, and how to use threading for both client and server side programming.
+To prepare for this assignment, all video material provided by the course on non-blocking sockets was viewed together with the code of the sample programs. Important information was gathered on how to communicate with sockets using the Java nio package, and how to use threading for both client and server side programming.
 
 \section{Method}
 
-\noindent The program was written in Java using the IntelliJ IDE. To simplify running the programs outside of the IDE, the client and server were split into two projects and Maven was used to be able to generate an executable JAR for both the server and the client program. These JARs were used to better simulate a distributed environment with a server and several connected clients and check that the requirements were met. Before writing any part of the program, a preliminary layered design was created as a directory tree in each project.
-
-To facilitate developing the net layer by knowing exactly what would be sent, the game logic for Hangman was developed first on the client and server by hard coding dummy code in the net layer. This process took into account the requirements regarding state on the client and server side. After game logic was finished, the net layer handling TCP communication was developed. After having a solution with TCP communication, the threading parts were added, to meet all requirements.
+\noindent Since the previous assignment was completed using layered architecture, the main work was done by substituting the net layers to communicate using non-blocking sockets. To test the ability for the server to handle multiple clients, several clients were started and played with simultaneously while connected to a single server instance. To test that the client's user interface was responsive, the server thread was put to sleep during a request, to see that you could still write commands in the client interface while waiting for a reply. The game was played to see that it still works as expected.
 
 \section{Result}
 
-\noindent The complete source code can be found at \href{https://github.com/fongie/Hangman}{https://github.com/fongie/Hangman}.
+\noindent The complete source code can be found at \href{https://github.com/fongie/Hangman/tree/nonblocking}{https://github.com/fongie/Hangman/tree/nonblocking}.
 
 \begin{itemize}
-    \item To communicate using TCP sockets, one can decide on a text-based protocol or an object-based protocol. In this case, an object-based protocol was used. The Java net package was used to create a listening server socket in the server program, and an internet socket on the client side. These communicate using streams. The general streams provided by the sockets are then wrapped in streams handling Objects, where data transfer objects (DTO) that represent are sent and received. The client sends \href{https://github.com/fongie/Hangman/blob/master/hangmanclient/src/main/java/DTO/Guess.java}{Guess} objects which the server receives, and the server sends \href{https://github.com/fongie/Hangman/blob/master/hangmanserver/src/main/java/DTO/StatusReport.java}{StatusReport} objects which the client receives.
-    
-    \item Since no state was allowed to be stored on the client, the client simply receives \href{https://github.com/fongie/Hangman/blob/master/hangmanserver/src/main/java/DTO/StatusReport.java}{StatusReport} objects from the server, as explained above, which include game information such as the number of letters in the word, the current score, remaining attempts, and letters which have been correctly guessed so far. Note that no information is sent that can enable the user to cheat, such as the actual word that is to be guessed. Only the server knows that.
-    
-    \item The server was not allowed to send parts of the user interface, which is why the StatusReport object, explained above, only includes Java primitives and objects and nothing that can be directly used in the user interface on the client.
-    
-    \item For the user interface to be informative, the client program takes StatusReport objects that it receives and prints them prettily to the screen so that the user knows the current state of the game and sees a visual representation of the hangman game, which is the correct number of underscores and the previously guessed correct letters filled in at the right place. To achieve the presentation of the word and the guessed letters, a new DTO was introduced to represent correctly guessed letters and their position, which are sent by the server in the StatusReport and can be \href{https://github.com/fongie/Hangman/blob/50fc79c8c3e3d40953705370cbfbb7dee6867700/hangmanclient/src/main/java/view/UserInterface.java#L75}{looped over by the client} to fill in the correct letters guessed so far, \href{https://github.com/fongie/Hangman/blob/master/hangmanserver/src/main/java/DTO/LetterPosition.java}{LetterPosition}.
-    
-    \item To be able to handle multiple clients, the server \href{https://github.com/fongie/Hangman/blob/50fc79c8c3e3d40953705370cbfbb7dee6867700/hangmanserver/src/main/java/net/Server.java#L53}{starts a new thread} for each connected client. The new thread runs an object from the class \href{https://github.com/fongie/Hangman/blob/master/hangmanserver/src/main/java/net/Client.java}{Client}, which starts a new game and handles all communication with that particular client. For a seamless user experience in the client, all socket communication is done in threads separate from the main user interface (console) thread. This is done using the common thread pool and the Java concurrent package in the client program's \href{https://github.com/fongie/Hangman/blob/master/hangmanclient/src/main/java/contr/Controller.java}{Controller}. This means that while communication is being made between client and server, the user interface can still be interacted with on the client side.
-    
-    \item To comply with object-oriented design principles and a layered architecture, the programs were structured before-hand. The client consists of a classic View-Controller-Net architecture, where the View handles the user interface, the Controller handles the threading, and the Net package handles communication with the server. All function calls are made from the top down. One tricky part of this is how to handle the response from the server. This is done by having a inner class in the View be sent down to the Controller layer as a Consumer, which means that after the Controller \href{https://github.com/fongie/Hangman/blob/50fc79c8c3e3d40953705370cbfbb7dee6867700/hangmanclient/src/main/java/contr/Controller.java#L35}{initiates the server communication}, the response will be \href{https://github.com/fongie/Hangman/blob/50fc79c8c3e3d40953705370cbfbb7dee6867700/hangmanclient/src/main/java/view/UserInterface.java#L86}{consumed (accepted)} by the Consumer, which can then format and print the response to the user interface, without having to receive an actual function call from the lower layer. The client program also contains a DTO package, for data objects, and a Startup package, to start the program.
 
-        The server consists of merely two working layers, the Net and Model layers. There is also a DTO layer for the data objects, and a Startup layer. In the preliminary design plan, there was also a Controller layer, but since this layer only ended up forwarding function calls and not containing anything at all, it was removed, and the Net layer was allowed to directly construct a new Game in the Model layer. This still means that the packages and classes are well encapsulated, cohesive, and that all function calls are made from the top down, from the Net to the Model layer.
-
+	\item To communicate using non-blocking sockets, the Sockets previously used were replaced by Channels and a Selector is created to be able to handle the read, write, and connect operations in a \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanserver/src/main/java/net/Server.java#L49}{main loop}. New clients are connected on the server by \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanserver/src/main/java/net/Server.java#L85}{registering} the client channel to the selector and attaching a new \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanserver/src/main/java/net/Client.java}{Client} object with it. In the previous assignment, the Client objects were run in separate threads, but here they are not, to comply with the requirement on the optional task. The Client object handles the corresponding client channel, that is, prepares to write and receives communication from the player client. On the client side, the process is \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanclient/src/main/java/net/Connection.java#L84}{similar}, but of course only using a single channel to the server.
+	
+	\item For a responsive user interface on the client, the user interface is run in one thread while the \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanclient/src/main/java/net/Connection.java}{Connection} object runs in a separate thread, handling all communication with the server. This means that when communication is being made between client and server, the client still has a responsive user interface.
+	
+	On the server side, since the Optional task was completed, the clients do not run in multiple threads, but instead they are handled in the single-threaded event loop. This is possible since each new client that connects receive its own selector key with a Client handler object attached to it, and this means that whenever communication is made it can be \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanserver/src/main/java/net/Server.java#L62}{handled by a particular Client object}, storing the state of the game for that particular user. Because the sockets are non-blocking, threading is not needed to handle multiple clients.
+	
+	\item The program kept the same design as in the previous assignment, which means that it still complies with object-oriented design principles and layered architecture. One difference worth mentioning is that the \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanclient/src/main/java/view/UserInterface.java#L56}{Observer} pattern is now employed in the client program to print to the user interface, since some changes had to be made to the threading and using the Consumer interface for the same purpose was no longer applicable.
+	
+	\item The program works exactly like the previous program, as shown in the requested screenshot (Fig. 1).
+	
+	\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[scale=0.35]{game.png}
+    \caption{The server console (top right), and three clients playing simultaneously.}
+    \label{fig:game}
+  \end{center}
+\end{figure}
+	
+	\item The optional task was, as described above, fulfilled by not running Client handles in their own threads, but using the Selector and its methods to run all clients in a single-threaded event loop. There was an additional part to this task which was to do expensive I/O in a separate thread. This program only has one such operation, namely the picking of the random word from a text file. Since this operation is done at the instantiation of a new Game object, this process is \href{https://github.com/fongie/Hangman/blob/nonblocking/hangmanserver/src/main/java/net/Client.java#L67}{done in a separate thread} as required.
+	
 \end{itemize}
+
+
+
 
 
 \section{Discussion}
 
-This assignment was to develop a distributed application using blocking sockets, and use threading to achieve a seamless user experience while being able to entertain several clients. The application was a game of Hangman which was required to have a layered architecture and an informative user interface. As presented above, all the basic requirements were met. There was an optional task to implement a length header to each socket message, but this was not implemented.
+This assignment was to develop a distributed application using non-blocking sockets, and use threading to achieve a seamless user experience in the client program while being able to entertain several clients in a single thread in the server program. The application was a game of Hangman which was required to have a layered architecture and an informative user interface. As presented above, all the basic and optional requirements were met with.
 
-Since I have not worked with either socket communication or threading before, this was a learning experience on those subjects. Somewhat surprisingly, there were not many problems met with, and the development went smoothly - not very usual. This smoothness was probably due to the comprehensive lecture material, being more proficient at how to structure and develop programs after three years at university, and a bit of luck.
+The main difficulty with this assignment was to get one's head around how the Selector works, and how it can keep track of which channel is which etc. However, once this was clear, it was not very hard to re-use what was created in the last assignment but with new net layers. I had some difficulty finding a reasonable way to use threading with my I/O operation, because the word fetching has to be completed before writing back the new game state to the client, but I think I found a way that works in the end.
 
-Given more time, I could improve the program to contain more user interaction, for example to start the game, receive a message on winning or losing instead of just the score being adjusted, to display what the word was when you fail, and to develop a graphical user interface. Since there were no requirements on these quality-of-life aspects, I chose to spend my time on studying other things instead.
+I could still improve the user interface given more time, as mentioned in the last report, but that was outside of the requirements of this assignment as well.
 
 \section{Comments About the Course}
 
-I spent about 8 hours on the lecture material, about 12 hours on the assignment (including failed header-implementing-time), and about 2 hours to write the report, making 22 hours in total.
+I spent about 8 hours on the lecture material, about 8 hours on the assignment, and about 2 hours to write the report, making 18 hours in total.
 
 \end{document}
